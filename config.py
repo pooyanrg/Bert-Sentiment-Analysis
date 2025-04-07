@@ -1,89 +1,131 @@
-class Config:
-    """
-    Configuration class for your model and training.
+# coding=utf-8
+# Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
+# Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""BERT model configuration"""
+
+from collections import OrderedDict
+from typing import Mapping
+
+from transformers.configuration_utils import PretrainedConfig
+
+
+class BertConfig(PretrainedConfig):
+    r"""
+    This is the configuration class to store the configuration of a [`BertModel`] or a [`TFBertModel`]. It is used to
+    instantiate a BERT model according to the specified arguments, defining the model architecture. Instantiating a
+    configuration with the defaults will yield a similar configuration to that of the BERT
+    [google-bert/bert-base-uncased](https://huggingface.co/google-bert/bert-base-uncased) architecture.
+
+    Configuration objects inherit from [`PretrainedConfig`] and can be used to control the model outputs. Read the
+    documentation from [`PretrainedConfig`] for more information.
+
 
     Args:
-        prop (float): Proportion of tokens to mask in each sentence. Default is 0.15.
-        tokenizer_path (str): Path to the tokenizer. Default is "bert-base-uncased".
-        seq_len (int): Maximum sequence length. Default is 128.
-        delimiters (str): Punctuation marks to split sentences. Default is ".,;:!?".
-        lower_case (bool): Flag to indicate whether to convert text to lowercase. Default is True.
-        buffer_size (int): Number of samples to fetch and store in the buffer. Default is 1.
-        shuffle (bool): Flag to indicate whether to shuffle the buffer. Default is True.
-        data_dir (str): Directory containing the data files. Default is "path/to/data".
+        vocab_size (`int`, *optional*, defaults to 30522):
+            Vocabulary size of the BERT model. Defines the number of different tokens that can be represented by the
+            `inputs_ids` passed when calling [`BertModel`] or [`TFBertModel`].
+        hidden_size (`int`, *optional*, defaults to 768):
+            Dimensionality of the encoder layers and the pooler layer.
+        num_hidden_layers (`int`, *optional*, defaults to 12):
+            Number of hidden layers in the Transformer encoder.
+        num_attention_heads (`int`, *optional*, defaults to 12):
+            Number of attention heads for each attention layer in the Transformer encoder.
+        intermediate_size (`int`, *optional*, defaults to 3072):
+            Dimensionality of the "intermediate" (often named feed-forward) layer in the Transformer encoder.
+        hidden_act (`str` or `Callable`, *optional*, defaults to `"gelu"`):
+            The non-linear activation function (function or string) in the encoder and pooler. If string, `"gelu"`,
+            `"relu"`, `"silu"` and `"gelu_new"` are supported.
+        hidden_dropout_prob (`float`, *optional*, defaults to 0.1):
+            The dropout probability for all fully connected layers in the embeddings, encoder, and pooler.
+        attention_probs_dropout_prob (`float`, *optional*, defaults to 0.1):
+            The dropout ratio for the attention probabilities.
+        max_position_embeddings (`int`, *optional*, defaults to 512):
+            The maximum sequence length that this model might ever be used with. Typically set this to something large
+            just in case (e.g., 512 or 1024 or 2048).
+        type_vocab_size (`int`, *optional*, defaults to 2):
+            The vocabulary size of the `token_type_ids` passed when calling [`BertModel`] or [`TFBertModel`].
+        initializer_range (`float`, *optional*, defaults to 0.02):
+            The standard deviation of the truncated_normal_initializer for initializing all weight matrices.
+        layer_norm_eps (`float`, *optional*, defaults to 1e-12):
+            The epsilon used by the layer normalization layers.
+        position_embedding_type (`str`, *optional*, defaults to `"absolute"`):
+            Type of position embedding. Choose one of `"absolute"`, `"relative_key"`, `"relative_key_query"`. For
+            positional embeddings use `"absolute"`. For more information on `"relative_key"`, please refer to
+            [Self-Attention with Relative Position Representations (Shaw et al.)](https://arxiv.org/abs/1803.02155).
+            For more information on `"relative_key_query"`, please refer to *Method 4* in [Improve Transformer Models
+            with Better Relative Position Embeddings (Huang et al.)](https://arxiv.org/abs/2009.13658).
+        is_decoder (`bool`, *optional*, defaults to `False`):
+            Whether the model is used as a decoder or not. If `False`, the model is used as an encoder.
+        use_cache (`bool`, *optional*, defaults to `True`):
+            Whether or not the model should return the last key/values attentions (not used by all models). Only
+            relevant if `config.is_decoder=True`.
+        classifier_dropout (`float`, *optional*):
+            The dropout ratio for the classification head.
 
-        # Embeddings params
-        hidden_size (int): Size of the hidden layers. Default is 768.
-        vocab_size (int): Size of the vocabulary. Default is 30522.
-        hidden_dropout_prob (float): Dropout probability for hidden layers. Default is 0.1.
+    Examples:
 
-        # Attention params
-        num_heads (int): Number of attention heads. Default is 8.
+    ```python
+    >>> from transformers import BertConfig, BertModel
 
-        # BERT model params
-        num_blocks (int): Number of blocks in the BERT model. Default is 12.
-        final_dropout_prob (float): Dropout probability for the final layer. Default is 0.5.
+    >>> # Initializing a BERT google-bert/bert-base-uncased style configuration
+    >>> configuration = BertConfig()
 
-        # Optimizer params
-        n_warmup_steps (int): Number of warmup steps for the optimizer. Default is 10000.
-        weight_decay (float): Weight decay for the optimizer. Default is 0.01.
-        lr (float): Learning rate for the optimizer. Default is 1e-4.
-        betas (tuple): Betas for the optimizer. Default is (0.9, 0.999).
+    >>> # Initializing a model (with random weights) from the google-bert/bert-base-uncased style configuration
+    >>> model = BertModel(configuration)
 
-        # Trainer params
-        cuda_devices (list): List of CUDA devices. Default is None.
-        with_cuda (bool): Flag to use CUDA. Default is True.
-        log_freq (int): Logging frequency. Default is 10.
-        batch_size (int): Batch size for training. Default is 64.
-        save_path (str): Path to save model checkpoints. Default is 'tmp/checkpoints'.
+    >>> # Accessing the model configuration
+    >>> configuration = model.config
+    ```"""
 
-        # Run the model params
-        seed (int): Random seed for reproducibility. Default is 0.
-        test_dataset (str): Path to the test dataset or None. Default is None.
-        epochs (int): Number of training epochs. Default is 1.
-    """
+    model_type = "bert"
 
-    def __init__(self, prop=0.15, seq_len=128, delimiters=".,;:!?",
-                 lower_case=True, buffer_size=1, shuffle=True, data_dir="path/to/data", hidden_size=768,
-                 vocab_size=30522, hidden_dropout_prob=0.1, num_heads=8, num_blocks=12, final_dropout_prob=0.5,
-                n_warmup_steps=10000, weight_decay=0.01, lr=1e-4, betas=(0.9, 0.999),
-                 cuda_devices=None, with_cuda=True, log_freq=10, batch_size=64, save_path='tmp/checkpoints',
-                 seed=0, test_dataset=None, epochs=1):
+    def __init__(
+        self,
+        vocab_size=30522,
+        hidden_size=768,
+        num_hidden_layers=12,
+        num_attention_heads=12,
+        intermediate_size=3072,
+        hidden_act="gelu",
+        hidden_dropout_prob=0.1,
+        attention_probs_dropout_prob=0.1,
+        max_position_embeddings=512,
+        type_vocab_size=2,
+        initializer_range=0.02,
+        layer_norm_eps=1e-12,
+        pad_token_id=0,
+        position_embedding_type="absolute",
+        use_cache=True,
+        classifier_dropout=None,
+        **kwargs,
+    ):
+        super().__init__(pad_token_id=pad_token_id, **kwargs)
 
-        # Dataset params
-        self.prop = prop
-        self.seq_len = seq_len
-        self.delimiters = delimiters
-        self.lower_case = lower_case
-        self.buffer_size = buffer_size
-        self.shuffle = shuffle
-        self.data_dir = data_dir
-
-        # Embeddings params
-        self.hidden_size = hidden_size
         self.vocab_size = vocab_size
+        self.hidden_size = hidden_size
+        self.num_hidden_layers = num_hidden_layers
+        self.num_attention_heads = num_attention_heads
+        self.hidden_act = hidden_act
+        self.intermediate_size = intermediate_size
         self.hidden_dropout_prob = hidden_dropout_prob
+        self.attention_probs_dropout_prob = attention_probs_dropout_prob
+        self.max_position_embeddings = max_position_embeddings
+        self.type_vocab_size = type_vocab_size
+        self.initializer_range = initializer_range
+        self.layer_norm_eps = layer_norm_eps
+        self.position_embedding_type = position_embedding_type
+        self.use_cache = use_cache
+        self.classifier_dropout = classifier_dropout
 
-        # Attention params
-        self.num_heads = num_heads
-
-        # BERT model params
-        self.num_blocks = num_blocks
-        self.final_dropout_prob = final_dropout_prob
-
-        # Optimizer params
-        self.n_warmup_steps = n_warmup_steps
-        self.weight_decay = weight_decay
-        self.lr = lr
-        self.betas = betas
-
-        # Trainer params
-        self.cuda_devices = cuda_devices
-        self.with_cuda = with_cuda
-        self.log_freq = log_freq
-        self.batch_size = batch_size
-        self.save_path = save_path
-
-        # Run the model params
-        self.seed = seed
-        self.epochs = epochs
